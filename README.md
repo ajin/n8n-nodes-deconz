@@ -34,8 +34,3 @@ To make this node even better, please let me know. Commits are always welcome.
 ## Issues
 
 If you have any issues, please [let me know on GitHub](https://github.com/ajin/n8n-nodes-deconz/issues).
-
-
-## License
-
-[Apache 2.0 with Commons Clause](https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/LICENSE.md)
