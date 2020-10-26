@@ -2,7 +2,7 @@
     "name": "n8n-nodes-deconz",
     "version": "0.1.1",
     "description": "Provides n8n node implementation to enables communicating with dresden elektronik deCONZ gateway.",
-    "license": "LICENSE.md",
+    "license": "GNU GPLv3",
     "homepage": "https://github.com/ajin/n8n-nodes-deconz",
     "author": {
         "name": "Ajin",
