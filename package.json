@@ -1,12 +1,12 @@
 {
     "name": "n8n-nodes-deconz",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Provides n8n node implementation to enables communicating with dresden elektronik deCONZ gateway.",
     "license": "LICENSE.md",
-    "homepage": "https://n8n.io",
+    "homepage": "https://github.com/ajin/n8n-nodes-deconz",
     "author": {
-        "name": "Ajin Man Tuladhar",
-        "email": "ajin.tuladhar@gmail.com"
+        "name": "Ajin",
+        "email": "ajin@tuladhar.net"
     },
     "repository": {
         "type": "git",
