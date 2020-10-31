@@ -27,9 +27,9 @@ npm install n8n-nodes-deconz
 n8n
 ```
 
-Next step is to create an API key to access deCONZ. This key is required to monitor and control resources. Since I have not figured out how to programmatically save API key to credentials, this step must be performed manually. 
+Next step is to create an API key to access deCONZ. This key is required to monitor and control resources. Go to Settings → Gateway → Advanced → Authenticate app in the Phoscon App and then use the deCONZ node in n8n (Type: Configuration, Configuration: Get API key) to retrieve the new API key. Since I have not figured out how to programmatically save API key to credentials, you will need to copy the output of this node to the credential. 
 
-Go to Settings → Gateway → Advanced → Authenticate app in the Phoscon App and then use the deCONZ configurator in Home Assistant frontend to create an API key. When you’re done setting up deCONZ it will be stored as a configuration entry.
+Alternative, you can retrieve the API key from the console. 
 
 ```bash
 curl -d '{"devicetype": "n8n-test"}' -H "Content-Type: application/json" -X POST -s http://<deconz_host>:80/api/ 
