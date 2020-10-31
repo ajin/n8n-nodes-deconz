@@ -10,7 +10,8 @@ import {
 
 import {
 	apiRequest,
-	getResources
+	getResources,
+	getApiKeyRetry
 } from './GenericFunctions';
 
 export class DeCONZ implements INodeType {
@@ -38,19 +39,32 @@ export class DeCONZ implements INodeType {
 				displayName: 'Type',
 				name: 'resourceType',
 				type: 'options',
-				options: [
-					{
-						name: 'Light',
-						value: 'light',
-					},
-					{
-						name: 'Sensor',
-						value: 'sensor',
-					},
-				],
-				default: 'light',
+				typeOptions: {
+					loadOptionsMethod: 'getResourceTypes',
+				},
+				default: '',
 				description: 'Resource to change the state.',
 				required: true,
+			},
+			{
+				displayName: 'Configuration',
+				name: 'config',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getConfigurations',
+					loadOptionsDependsOn: [
+						'resourceType',
+					]
+				},
+				displayOptions: {
+					show: {
+						resourceType: [
+							'/config',
+						],
+					},
+				},
+				required: true,
+				default: '',
 			},
 			{
 				displayName: 'Resource',
@@ -61,6 +75,13 @@ export class DeCONZ implements INodeType {
 					loadOptionsDependsOn: [
 						'resourceType',
 					]
+				},
+				displayOptions: {
+					show: {
+						resourceType: [
+							'/lights','/sensors',
+						],
+					},
 				},
 				required: true,
 				default: '',
@@ -83,7 +104,7 @@ export class DeCONZ implements INodeType {
 				displayOptions: {
 					show: {
 						resourceType: [
-							'light',
+							'/lights',
 						],
 					},
 				},
@@ -100,7 +121,7 @@ export class DeCONZ implements INodeType {
 				displayOptions: {
 					show: {
 						resourceType: [
-							'light',
+							'/lights',
 						],
 						operation: [
 							'update',
@@ -118,7 +139,7 @@ export class DeCONZ implements INodeType {
 				displayOptions: {
 					show: {
 						resourceType: [
-							'light',
+							'/lights',
 						],
 						operation: [
 							'update',
@@ -149,29 +170,61 @@ export class DeCONZ implements INodeType {
 			// select them easily
 			async getResourcesa(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const type = this.getNodeParameter('resourceType') as string;
-				const endpoint = (type === "light") ? ("/lights") : ("/sensors");
-				console.log(endpoint);
-				const returnData = await getResources.call(this, endpoint);
+				const returnData = await getResources.call(this, type);
 				return returnData;
 			},
 
-
-			async getGroups(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-
-				const returnData: INodePropertyOptions[] = [];
-				const groups = await apiRequest.call(this, 'GET', '/groups');
-
-				for (const group of Object.keys(groups)) {
-					const groupName = groups[group].name;
-					const groupId = group;
-
-					returnData.push({
-						name: groupName,
-						value: groupId
-					});
+			async getConfigurations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				let options = [
+					{
+						name: 'Get API Key',
+						value: 'api',
+						description: 'Creates a new API key which provides authorized access to the REST API. The request will only succeed if the gateway is unlocked',
+					},
+				];
+				const credentials = this.getCredentials('deCONZ');
+				if (credentials === undefined) {
+					throw new Error('No credentials found!');
 				}
-				return returnData;
+
+				return options;
+
 			},
+
+			async getResourceTypes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				let options = [];
+				const credentials = this.getCredentials('deCONZ');
+
+				if (credentials === undefined) {
+					throw new Error('No credentials found!');
+				}
+
+				if (typeof credentials.accessToken === 'undefined' || !credentials.accessToken){
+					options = [
+						{
+							name: 'Configuration',
+							value: '/config',
+						},
+					];
+				} else {
+					options = [
+						{
+							name: 'Light',
+							value: '/lights',
+						},
+						{
+							name: 'Sensor',
+							value: '/sensors',
+						},
+						{
+							name: 'Configuration',
+							value: '/config',
+						}
+					];
+				}
+				
+				return options;
+			}
 		}
 	};
 
@@ -186,6 +239,7 @@ export class DeCONZ implements INodeType {
 		let resourceId = '';
 		let on = false;
 		let data;
+		let configuration;
 		let additionalFields;
 		
 
@@ -194,18 +248,24 @@ export class DeCONZ implements INodeType {
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			type = this.getNodeParameter('resourceType', itemIndex , '') as string;
 			operation = this.getNodeParameter('operation', itemIndex, '') as string;
+			configuration = this.getNodeParameter('config', itemIndex, '') as string;
 			resourceId = this.getNodeParameter('resourceId', itemIndex, '') as string;
 			resourceId = resourceId.split(':')[0];
 			on = this.getNodeParameter('on', itemIndex, '') as boolean;
 			additionalFields = this.getNodeParameter('additionalFields', itemIndex, '') as IDataObject;
 		}
 
-		if (operation === 'update' && type === "light") {
-			const endpoint = `/lights/${resourceId}/state/`;
+		// request to get the API key
+		if (type === "/config" && configuration === "api"){
+			responseData = await getApiKeyRetry(this, 30);
+
+		// set new value for the lights 
+		} else if (operation === 'update' && type === "/lights") {
+			const endpoint = `${type}/${resourceId}/state/`;
 			const body = {
 				on,
 			}
-
+			
 			Object.assign(body, additionalFields);
 			data = await apiRequest.call(this, 'PUT', endpoint, body);
 			
@@ -217,15 +277,9 @@ export class DeCONZ implements INodeType {
 					responseData[key] = successData[prop];
 				}
 			}
-		}
 
-		if (operation === 'read' && type === "light") {
-			const endpoint = `/lights/${resourceId}/`;
-			responseData = await apiRequest.call(this, 'GET', endpoint);
-		}
-
-		if (type === "sensor") {
-			const endpoint = `/sensors/${resourceId}/`;
+		} else if ((operation === 'read' && type === "/lights") || type === "/sensors") {
+			const endpoint = `${type}/${resourceId}/`;
 			responseData = await apiRequest.call(this, 'GET', endpoint);
 		}
 
@@ -238,4 +292,5 @@ export class DeCONZ implements INodeType {
 		console.log(returnData);
 		return [this.helpers.returnJsonArray(returnData)];
 	}
+
 }
