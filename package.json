@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-deconz",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "Provides n8n node implementation to enables communicating with dresden elektronik deCONZ gateway.",
     "license": "GNU GPLv3",
     "homepage": "https://github.com/ajin/n8n-nodes-deconz",
@@ -12,6 +12,11 @@
         "type": "git",
         "url": "git+https://github.com/ajin/n8n-nodes-deconz.git"
     },
+    "keywords": [
+        "n8n",
+        "n8n-nodes",
+        "deconz"
+      ],
     "main": "index.js",
     "scripts": {
         "dev": "npm run watch",
