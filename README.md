@@ -20,6 +20,9 @@ To use a n8n-nodes-deconz, it needs to be installed within n8n. For example like
 # Install n8n
 npm install n8n
 
+# Navigate to the n8n installed directory. The full path might vary on different system
+cd /usr/local/lib/node_modules/n8n
+
 # Install n8n-nodes-deconz
 npm install n8n-nodes-deconz
 

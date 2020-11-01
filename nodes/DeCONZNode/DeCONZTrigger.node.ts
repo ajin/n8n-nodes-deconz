@@ -45,11 +45,11 @@ export class DeCONZTrigger implements INodeType {
 				options: [
 					{
 						name: 'Light',
-						value: 'light',
+						value: 'lights',
 					},
 					{
 						name: 'Sensor',
-						value: 'sensor',
+						value: 'sensors',
 					},
 				],
 				default: 'Light',
@@ -106,8 +106,8 @@ export class DeCONZTrigger implements INodeType {
 			// Get all the resources to display on the dropdown
 			async getResources(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				console.log("[deCONZTrigger] getResources");
-				const type = this.getNodeParameter('resourceType') as string;
-				const endpoint = (type === "light") ? ("/lights") : ("/sensors");
+				const resourceType = this.getNodeParameter('resourceType') as string;
+				const endpoint = (resourceType === "lights") ? ("/lights") : ("/sensors");
 				const returnData = await getResources.call(this, endpoint);
 				return returnData;
 			}
